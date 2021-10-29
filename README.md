@@ -12,4 +12,3 @@ My changes on top of openssl.vim:
    - turn off shelltemp and undofile when working with encrypted stuff.
    - throw out the password safe stuff, I don't need it.
    - exclude vulnerable ciphers from the list of supported file extensions
-"
