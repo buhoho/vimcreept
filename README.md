@@ -1,6 +1,8 @@
 # VIMCRYPT vim plugin - encrypt your files with openssl
 
-This code has been derived from [openssl.vim](https://github.com/vim-scripts/openssl.vim/blob/master/plugin/openssl.vim)
+This code has been derived from [openssl.vim](https://github.com/vim-scripts/openssl.vim/blob/master/plugin/openssl.vim) 
+
+(There is a second version of this plugin, please check out [vimcrypt2](https://github.com/MoserMichael/vimcrypt2) )
 
 It will you openssl to encrypt/decryt any text file with the following extensions:  ``` *.aes,*.cast,*.rc5,*.desx ```
 
