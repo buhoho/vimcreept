@@ -74,8 +74,8 @@ function! s:OpenSSLWritePre()
     endif
 
     "backup the file.
-    if exists(expand("<afile>"))
-        let s:cmd = "cp ". expand("<afile>") . " " . expand("<afile>") . ".bak"
+    if filereadable(expand("<afile>"))
+        let s:cmd = "cp -f ". expand("<afile>") . " " . expand("<afile>") . ".bak"
         call system(s:cmd)
     endif
 
