@@ -4,14 +4,17 @@ endif
 let vimcrypt_encrypted_loaded = 1
 
 " use openssl to encrypt decrypt files.
-" copied/adapted from https://github.com/vim-scripts/openssl.vim/blob/master/plugin/openssl.vim
+" copied/adapted from https://github.com/MoserMichael/vimcrypt
 " my changes;
-"   - use aes-ecb instead of aes-cbc. Reason: if file gets damaged then with cbc
-"   everything is lost after the damage point, ecb mode is good enough for text)
-"   - turn off shelltemp and undofile when working with encrypted stuff.
-"   - throw out the password safe stuff, I don't need it.
-"   - exclude vulnerable ciphers from the list of supported file extensions
-"
+"   - I have reverted to using cbc as our own improvement.
+"   - Password confirmation when encrypting
+"   - Now works with gvim.
+"   - The password you enter will be kept in the script scope for the duration of the session.
+
+if !exists("s:stored_passwords")
+    let s:stored_passwords = {}
+endif
+
 function! s:OpenSSLReadPre()
     set cmdheight=3
     set viminfo=
@@ -30,14 +33,18 @@ endfunction
 
 function! s:OpenSSLReadPost()
     let l:cipher = expand("%:e")
+
+    let l:filename = expand('%:p')  " full path
+    let l:default = has_key(s:stored_passwords, l:filename) ? s:stored_passwords[l:filename] : ''
+    let $OPENSSL_PASS = input('decrypt password: ', l:default)
+
     if l:cipher == "aes"
-        let l:cipher = "aes-256-ecb"
+        let l:cipher = "aes-256-cbc -pbkdf2"
     endif
     if l:cipher == "bfa"
-        let l:cipher = "bf"
-        let l:expr = "0,$!openssl " . l:cipher . " -d -a -salt"
+        let l:expr = "0,$!openssl bf -d -a -salt -pass env:OPENSSL_PASS"
     else
-        let l:expr = "0,$!openssl " . l:cipher . " -d -salt"
+        let l:expr = "0,$!openssl " . l:cipher . " -d -salt -pass env:OPENSSL_PASS"
     endif
 
     silent! execute l:expr
@@ -52,6 +59,10 @@ function! s:OpenSSLReadPost()
         echo "COULD NOT DECRYPT"
         return
     endif
+
+    let s:stored_passwords[l:filename] = $OPENSSL_PASS " if read success
+    let $OPENSSL_PASS = ''
+
     set nobin
     set cmdheight&
     set shell&
@@ -63,14 +74,30 @@ function! s:OpenSSLWritePre()
     call s:OpenSSLReadPre()
 
     let l:cipher = expand("<afile>:e") 
+    let l:filename = expand('%:p')  " full path
+
+
+    let l:default = has_key(s:stored_passwords, l:filename) ? s:stored_passwords[l:filename] : ''
+    let l:pass1 = input('encryption password : ', l:default)
+    let l:pass2 = input('encryption password (Confirm) :', l:default)
+
+    if l:pass1 != l:pass2
+        let l:pass1 = ''
+        let l:pass2 = ''
+	throw 'Password mismatch: Save operation aborted.'
+    endif
+
+    let $OPENSSL_PASS = l:pass1
+    let l:pass1 = ''
+    let l:pass2 = ''
+
     if l:cipher == "aes"
-        let l:cipher = "aes-256-ecb"
+        let l:cipher = "aes-256-cbc -pbkdf2"
     endif
     if l:cipher == "bfa"
-        let l:cipher = "bf"
-        let l:expr = "0,$!openssl " . l:cipher . " -e -a -salt"
+        let l:expr = "0,$!openssl bf  -e -a -salt -pass env:OPENSSL_PASS"
     else
-        let l:expr = "0,$!openssl " . l:cipher . " -e -salt"
+        let l:expr = "0,$!openssl " . l:cipher . " -e -salt -pass env:OPENSSL_PASS"
     endif
 
     "backup the file.
@@ -91,6 +118,8 @@ function! s:OpenSSLWritePre()
         echo "COULD NOT ENCRYPT"
         return
     endif
+    let s:stored_passwords[l:filename] = $OPENSSL_PASS " temporary on memory
+    let $OPENSSL_PASS = ''
 endfunction
 
 function! s:OpenSSLWritePost()
