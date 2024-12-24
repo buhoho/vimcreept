@@ -2,7 +2,7 @@
 
 # test deploy from current dir, to test the thing.
 
-PLUGIN=vimcrypt
+PLUGIN=vimcreept
 
 set -e
 

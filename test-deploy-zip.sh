@@ -4,7 +4,7 @@ echo "create zip"
 
 set -e
 
-PLUGIN=vimcrypt
+PLUGIN=vimcreept
 
 echo "*** test deploy from current dir, to test the thing. ***"
 ./bundle.sh

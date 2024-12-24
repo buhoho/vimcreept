@@ -4,7 +4,7 @@
 
 set -e
 
-PLUGIN=vimcrypt
+PLUGIN=vimcreept
 
 if [[ -d $HOME/.vim-bak ]]; then
 
