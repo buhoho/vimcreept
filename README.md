@@ -1,22 +1,24 @@
-# VIMCRYPT vim plugin - encrypt your files with openssl
+# VIMCREEPT - Enhanced encryption plugin for Vim
+This is a fork of [vimcrypt](https://github.com/MoserMichael/vimcrypt), which was derived from [openssl.vim](https://github.com/vim-scripts/openssl.vim).
 
-This code has been derived from [openssl.vim](https://github.com/vim-scripts/openssl.vim) 
+It uses openssl to encrypt/decrypt text files with the following extensions: `*.aes,*.cast,*.rc5,*.desx`
+The plugin prompts for a password while reading and writing these files.
 
-(There is a second version of this plugin, please check out [vimcrypt2](https://github.com/MoserMichael/vimcrypt2) )
+## Changes from vimcrypt
+- Reverted back to aes-256-cbc from aes-256-ecb for better security
+- Added session-based password memory feature
+  - Remembered passwords are stored only in script scope
+  - Previously entered passwords are shown as default values in the prompt
+  - Passwords are cleared from memory when vim session ends
+- Improved gvim compatibility by using vim's native input function
+- Retained all security features from vimcrypt:
+  - Disabled `shelltemp` and `undofile` for encrypted files
+  - Excluded vulnerable ciphers
+  - Automatic backup before encryption
+  - Password confirmation when encrypting
 
-It will you openssl to encrypt/decryt any text file with the following extensions:  ``` *.aes,*.cast,*.rc5,*.desx ```
 
-It prompts you for a password while reading and writing these files.
-
-My changes on top of openssl.vim:
-
-   - use aes-256-ecb instead of aes-256-cbc. Reason: if the file gets damaged, then all the data after the damage point is lost, when using cipher block chaining (cbc). The damage would be limited to the AES block with the damaged byte, when using ecb.
-   - turn off vim options ```shelltemp``` and ```undofile``` when working with encrypted stuff.
-   - exclude vulnerable ciphers from the list of supported file extensions (each supported file extension maps to a cipher type)
-   - before encrypting an existing file: back up the old file. The new encryption will prompt for a password, so that you still have the old version, in the event that you have mistyped the pasword.
-   - throw out the password safe stuff, I don't need it.
-
-# Possible issues
+## Original features from vimcrypt
 
 ### multiple versions of openssl
 
@@ -45,21 +47,21 @@ The following command encrypts and decrypts a string with the same password, whi
 
 
 ```
-echo '123' | /usr/bin/openssl enc -e -aes-256-ecb -pass pass:blabla | /usr/bin/openssl enc -d -aes-256-ecb -pass pass:blabla
+echo '123' | /usr/bin/openssl enc -e -aes-256-cbc -pbkdf2 -pass pass:blabla | /usr/bin/openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:blabla
 123
 
-echo '123' | /usr/local/opt/openssl/bin/openssl enc -e -aes-256-ecb -pass pass:blabla | /usr/local/opt/openssl/bin/openssl enc -d -aes-256-ecb -pass pass:blabla
+echo '123' | /usr/local/opt/openssl/bin/openssl enc -e -aes-256-cbc -pbkdf2 -pass pass:blabla | /usr/local/opt/openssl/bin/openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:blabla
 123
 
 ```
 
-However the same does not work, if you  try to decrypt the output of the libre ssl fork with a different utility from OpenSSL.
+However the same does not work, if you try to decrypt the output of the libre ssl fork with a different utility from OpenSSL.
 
 ```
-echo '123' | /usr/local/opt/openssl/bin/openssl enc -e -aes-256-ecb -pass pass:blabla | /usr/bin/openssl enc -d -aes-256-ecb -pass pass:blabla
+echo '123' | /usr/local/opt/openssl/bin/openssl enc -e -aes-256-cbc -pbkdf2 -pass pass:blabla | /usr/bin/openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:blabla
 <error error error>
 
-echo '123' | /usr/bin/openssl enc -e -aes-256-ecb -pass pass:blabla | /usr/local/opt/openssl/bin/openssl enc -d -aes-256-ecb -pass pass:blabla
+echo '123' | /usr/bin/openssl enc -e -aes-256-cbc -pbkdf2 -pass pass:blabla | /usr/local/opt/openssl/bin/openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:blabla
 <error error error>
 
 ```
@@ -67,8 +69,9 @@ echo '123' | /usr/bin/openssl enc -e -aes-256-ecb -pass pass:blabla | /usr/local
 This is something that should be remembered, when moving encrypted files between different locations.
 
 
-# Acknowledgement
-
-This plugin is based on openssl.vim by Noah Spurrier [link](https://github.com/vim-scripts/openssl.vim)
+## Acknowledgements
+This plugin is based on:
+- [vimcrypt](https://github.com/MoserMichael/vimcrypt) by MoserMichael
+- [openssl.vim](https://github.com/vim-scripts/openssl.vim) by Noah Spurrier
 
 
